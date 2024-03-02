@@ -7,17 +7,13 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
-import joblib
-import requests
-from io import BytesIO
-from statsmodels.tsa.arima.model import ARIMA
+from pmdarima.arima import ARIMA
 
-# Function to load Keras model from a URL
-def load_model_from_github(model_file):
+# Function to load Keras model from a file
+def load_keras_model(model_file):
     try:
-        # Load the model from the GitHub URL
-        response = requests.get(model_file)
-        model = load_model(BytesIO(response.content))
+        # Load the Keras model
+        model = load_model(model_file)
         return model
     except Exception as e:
         st.error(f"Error loading model: {e}")
@@ -26,9 +22,8 @@ def load_model_from_github(model_file):
 # Function to load ARIMA model from a file
 def load_arima_model(model_file):
     try:
-        # Load the ARIMA model from the file
-        response = requests.get(model_file)
-        model = joblib.load(BytesIO(response.content))
+        # Load the ARIMA model
+        model = ARIMA.load(model_file)
         return model
     except Exception as e:
         st.error(f"Error loading ARIMA model: {e}")
@@ -36,14 +31,12 @@ def load_arima_model(model_file):
 
 # Function to make predictions using the selected model
 def make_predictions(model_type, model, X_pred_scaled, scaler):
-    if model_type in ['LSTM', 'Regressor']:
+    if model_type == 'LSTM' or model_type == 'Regressor':
         y_pred = model.predict(X_pred_scaled).flatten()
-    elif model_type == 'Random Forest':
-        y_pred = model.predict(X_pred_scaled)
-    elif model_type == 'Linear Regression':
+    elif model_type == 'Random Forest' or model_type == 'Linear Regression':
         y_pred = model.predict(X_pred_scaled)
     else:  # ARIMA
-        y_pred = model.forecast(steps=len(X_pred_scaled))[0]
+        y_pred = model.forecast(steps=len(X_pred_scaled))
     return scaler.inverse_transform(y_pred.reshape(-1, 1)).flatten()
 
 # Streamlit UI
@@ -68,25 +61,23 @@ def main():
 
     # Load the selected model
     model_files = {
-        'LSTM': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/LSTM.h5',
-        'Regressor': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5',
-        'Random Forest': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/random_forest_model.pkl',
-        'Linear Regression': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/linear_regression_model.pkl',
-        'ARIMA': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/arima_model.pkl'
+        'LSTM': 'LSTM.h5',
+        'Regressor': 'regressor_model.h5',
+        'Random Forest': 'random_forest_model.pkl',
+        'Linear Regression': 'linear_regression_model.pkl',
+        'ARIMA': 'arima_model.pkl'
     }
 
     model_file = model_files.get(selected_model)
     if model_file:
         if selected_model in ['LSTM', 'Regressor']:
-            model = load_model_from_github(model_file)
+            model = load_keras_model(model_file)
         elif selected_model == 'Random Forest':
             model = RandomForestRegressor()
-            response = requests.get(model_file)
-            model = joblib.load(BytesIO(response.content))
+            model = model.load(model_file)
         elif selected_model == 'Linear Regression':
             model = LinearRegression()
-            response = requests.get(model_file)
-            model = joblib.load(BytesIO(response.content))
+            model = model.load(model_file)
         elif selected_model == 'ARIMA':
             model = load_arima_model(model_file)
         else:
