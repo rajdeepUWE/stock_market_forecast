@@ -8,13 +8,16 @@ from tensorflow.keras.models import load_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 import joblib
+import requests
+from io import BytesIO
 from statsmodels.tsa.arima.model import ARIMA
 
 # Function to load Keras model from a URL
-def load_model_from_github(model_url):
+def load_model_from_github(model_file):
     try:
         # Load the model from the GitHub URL
-        model = load_model(model_url)
+        response = requests.get(model_file)
+        model = load_model(BytesIO(response.content))
         return model
     except Exception as e:
         st.error(f"Error loading model: {e}")
@@ -24,7 +27,8 @@ def load_model_from_github(model_url):
 def load_arima_model(model_file):
     try:
         # Load the ARIMA model from the file
-        model = joblib.load(model_file)
+        response = requests.get(model_file)
+        model = joblib.load(BytesIO(response.content))
         return model
     except Exception as e:
         st.error(f"Error loading ARIMA model: {e}")
@@ -64,11 +68,11 @@ def main():
 
     # Load the selected model
     model_files = {
-        'LSTM': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/LSTM.h5',
-        'Regressor': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5',
-        'Random Forest': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/random_forest_model.pkl',
-        'Linear Regression': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/linear_regression_model.pkl',
-        'ARIMA': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/arima_model.pkl'
+        'LSTM': 'LSTM.h5',
+        'Regressor': 'regressor_model.h5',
+        'Random Forest': 'random_forest_model.pkl',
+        'Linear Regression': 'linear_regression_model.pkl',
+        'ARIMA': 'arima_model.pkl'
     }
 
     model_file = model_files.get(selected_model)
@@ -77,10 +81,10 @@ def main():
             model = load_model_from_github(model_file)
         elif selected_model == 'Random Forest':
             model = RandomForestRegressor()
-            model = joblib.load(model_file)
+            model = joblib.load(BytesIO(response.content))
         elif selected_model == 'Linear Regression':
             model = LinearRegression()
-            model = joblib.load(model_file)
+            model = joblib.load(BytesIO(response.content))
         elif selected_model == 'ARIMA':
             model = load_arima_model(model_file)
         else:
