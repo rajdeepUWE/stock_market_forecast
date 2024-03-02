@@ -15,16 +15,21 @@ def load_keras_model_from_github(model_url):
     try:
         response = requests.get(model_url)
         response.raise_for_status()
-        with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
+        
+        # Create a temporary file to store the downloaded model
+        temp_model_file_path = tempfile.NamedTemporaryFile(suffix=".h5", delete=False).name
+        with open(temp_model_file_path, 'wb') as temp_model_file:
             temp_model_file.write(response.content)
-            temp_model_file_path = temp_model_file.name
+        
+        # Load the Keras model from the temporary file
         keras_model = load_model(temp_model_file_path)
         return keras_model
     except Exception as e:
         st.error(f"Error loading Keras model: {e}")
         return None
     finally:
-        if 'temp_model_file_path' in locals() and os.path.exists(temp_model_file_path):
+        # Clean up: delete the temporary file
+        if os.path.exists(temp_model_file_path):
             os.unlink(temp_model_file_path)
 
 # Streamlit UI
