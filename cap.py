@@ -8,33 +8,24 @@ from sklearn.svm import SVR
 import requests
 import tempfile
 import os
+from tensorflow.keras.models import load_model
 
-# Function to load SVR model from a URL
-def load_svr_model_from_github(model_url):
+# Function to load Keras model from a URL
+def load_keras_model_from_github(model_url):
     try:
         response = requests.get(model_url)
         response.raise_for_status()
-        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as temp_model_file:
+        with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
             temp_model_file.write(response.content)
             temp_model_file_path = temp_model_file.name
-        svr_model = joblib.load(temp_model_file_path)
-        return svr_model
+        keras_model = load_model(temp_model_file_path)
+        return keras_model
     except Exception as e:
-        st.error(f"Error loading SVR model: {e}")
+        st.error(f"Error loading Keras model: {e}")
         return None
     finally:
         if 'temp_model_file_path' in locals() and os.path.exists(temp_model_file_path):
             os.unlink(temp_model_file_path)
-
-# Function to train SVR model
-def train_svr_model(data):
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler.fit(data['Close'].values.reshape(-1, 1))
-    X = np.arange(len(data)).reshape(-1, 1)
-    y = data['Close'].values
-    svr_model = SVR(kernel='rbf')
-    svr_model.fit(scaler.transform(X), y)
-    return svr_model, scaler
 
 # Streamlit UI
 def main():
@@ -53,43 +44,20 @@ def main():
     st.subheader('Stock Data')
     st.write(data)
 
-    # Calculate moving averages
-    ma_100_days = data['Close'].rolling(window=100).mean()
-    ma_200_days = data['Close'].rolling(window=200).mean()
-
-    # Plot moving averages
-    st.subheader('Moving Average Plots')
-    fig_ma100 = go.Figure()
-    fig_ma100.add_trace(go.Scatter(x=data.index, y=ma_100_days, mode='lines', name='MA100'))
-    fig_ma100.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price'))
-    fig_ma100.update_layout(title='Price vs MA100', xaxis_title='Date', yaxis_title='Price')
-    st.plotly_chart(fig_ma100)
-
-    fig_ma200 = go.Figure()
-    fig_ma200.add_trace(go.Scatter(x=data.index, y=ma_100_days, mode='lines', name='MA100', line=dict(color='red')))
-    fig_ma200.add_trace(go.Scatter(x=data.index, y=ma_200_days, mode='lines', name='MA200', line=dict(color='blue')))
-    fig_ma200.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price', line=dict(color='green')))
-    fig_ma200.update_layout(title='Price vs MA100 vs MA200', xaxis_title='Date', yaxis_title='Price')
-    st.plotly_chart(fig_ma200)
-
-    # Load the SVR model from GitHub
+    # Load the Keras model from GitHub
     model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5'
-    svr_model = load_svr_model_from_github(model_url)
-    if svr_model is not None:
-        st.success("SVR model loaded successfully!")
-
-    # Train SVR model
-    svr_model, svr_scaler = train_svr_model(data)
-    st.success("SVR model trained successfully!")
+    keras_model = load_keras_model_from_github(model_url)
+    if keras_model is not None:
+        st.success("Keras Neural Network model loaded successfully!")
 
     # Model Training and Prediction
-    if svr_model is not None:
+    if keras_model is not None:
         # Make predictions
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaler.fit(data['Close'].values.reshape(-1, 1))
         X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
         X_pred_scaled = scaler.transform(X_pred)
-        y_pred = svr_model.predict(X_pred_scaled).flatten()
+        y_pred = keras_model.predict(X_pred_scaled).flatten()
 
         # Plot Original vs Predicted Prices
         st.subheader('Original vs Predicted Prices')
