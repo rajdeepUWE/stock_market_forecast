@@ -8,7 +8,7 @@ from tensorflow.keras.models import load_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from pmdarima.arima import ARIMA
-import pickle  # Import pickle module for loading ARIMA model parameters
+import pickle
 
 # Function to load Keras model from a file
 def load_keras_model(model_file):
@@ -21,9 +21,6 @@ def load_keras_model(model_file):
         return None
 
 # Function to load ARIMA model parameters from a file
-def load_arima_params(model_file):
-    try:
-        # Load ARIMA model parameters from a file
 def load_arima_params(model_file):
     try:
         # Load ARIMA model parameters from the file
