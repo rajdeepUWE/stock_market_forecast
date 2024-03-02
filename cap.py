@@ -12,7 +12,7 @@ from tensorflow.keras.models import load_model
 import urllib.request
 
 # Function to load Keras model from a URL
-def load_keras_model_from_github(model_url):
+def load_model_from_github(model_url):
     try:
         # Download the model file
         with urllib.request.urlopen(model_url) as response:
@@ -20,11 +20,11 @@ def load_keras_model_from_github(model_url):
                 temp_model_file.write(response.read())
                 temp_model_file_path = temp_model_file.name
 
-        # Load the Keras model from the temporary file
-        keras_model = load_model(temp_model_file_path)
-        return keras_model
+        # Load the model from the temporary file
+        model = load_model(temp_model_file_path)
+        return model
     except Exception as e:
-        st.error(f"Error loading Keras model: {e}")
+        st.error(f"Error loading model: {e}")
         return None
     finally:
         # Clean up: delete the temporary file
@@ -48,34 +48,45 @@ def main():
     st.subheader('Stock Data')
     st.write(data)
 
-    # Load the Keras model from GitHub
-    model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/linear_regression_model.h5'
-    keras_model = load_keras_model_from_github(model_url)
-    if keras_model is not None:
-        st.success("Keras Neural Network model loaded successfully!")
+    # Model selection
+    selected_model = st.sidebar.selectbox('Select Model', ['LSTM', 'Regressor', 'Random Forest', 'Linear Regression'])
 
-        # Make predictions
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        scaler.fit(data['Close'].values.reshape(-1, 1))
-        X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
-        X_pred_scaled = scaler.transform(X_pred)
-        y_pred = keras_model.predict(X_pred_scaled).flatten()
+    # Load the selected model from GitHub
+    model_urls = {
+        'LSTM': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/LSTM.h5',
+        'Regressor': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5',
+        'Random Forest': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/random_forest_model.h5',
+        'Linear Regression': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/linear_regression_model.h5'
+    }
 
-        # Plot Original vs Predicted Prices
-        st.subheader('Original vs Predicted Prices')
-        fig_pred = go.Figure()
-        fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
-                                       hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
-        fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=data['Close'].values[-7:], mode='lines', name='Original Price',
-                                       hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
-        fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
-        st.plotly_chart(fig_pred)
+    model_url = model_urls.get(selected_model)
+    if model_url:
+        model = load_model_from_github(model_url)
+        if model:
+            st.success(f"{selected_model} model loaded successfully!")
 
-        # Forecasted Prices for Next 7 Days
-        st.subheader('Next 7 Days Forecasted Close Prices')
-        forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=7)
-        forecast_df = pd.DataFrame({'Date': forecast_dates, 'Forecasted Close Price': y_pred})
-        st.write(forecast_df)
+            # Make predictions
+            scaler = MinMaxScaler(feature_range=(0, 1))
+            scaler.fit(data['Close'].values.reshape(-1, 1))
+            X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
+            X_pred_scaled = scaler.transform(X_pred)
+            y_pred = model.predict(X_pred_scaled).flatten()
+
+            # Plot Original vs Predicted Prices
+            st.subheader('Original vs Predicted Prices')
+            fig_pred = go.Figure()
+            fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
+                                           hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
+            fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=data['Close'].values[-7:], mode='lines', name='Original Price',
+                                           hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
+            fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
+            st.plotly_chart(fig_pred)
+
+            # Forecasted Prices for Next 7 Days
+            st.subheader('Next 7 Days Forecasted Close Prices')
+            forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=7)
+            forecast_df = pd.DataFrame({'Date': forecast_dates, 'Forecasted Close Price': y_pred})
+            st.write(forecast_df)
     else:
         st.error("Please select a valid model.")
 
