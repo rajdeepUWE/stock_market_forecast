@@ -73,7 +73,7 @@ def main():
     st.plotly_chart(fig_ma200)
 
     # Load the SVR model from GitHub
-    model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/svr_model.pkl'
+    model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5'
     svr_model = load_svr_model_from_github(model_url)
     if svr_model is not None:
         st.success("SVR model loaded successfully!")
