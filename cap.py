@@ -23,6 +23,9 @@ def load_keras_model(model_file):
 # Function to load ARIMA model parameters from a file
 def load_arima_params(model_file):
     try:
+        # Load ARIMA model parameters from a file
+def load_arima_params(model_file):
+    try:
         # Load ARIMA model parameters from the file
         with open(model_file, 'rb') as f:
             model_params = pickle.load(f)
@@ -76,14 +79,14 @@ def main():
             model = load_keras_model(model_file)
         elif selected_model == 'Random Forest':
             model = RandomForestRegressor()
-            model = model.load(model_file)
+            model.load(model_file)
         elif selected_model == 'Linear Regression':
             model = LinearRegression()
-            model = model.load(model_file)
+            model.load(model_file)
         elif selected_model == 'ARIMA':
             model_params = load_arima_params(model_file)
             if model_params:
-                model = ARIMA(**model_params)
+                model = ARIMA(order=(model_params['p'], model_params['d'], model_params['q']))
             else:
                 return
         else:
