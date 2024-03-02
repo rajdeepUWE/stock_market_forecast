@@ -81,9 +81,11 @@ def main():
             model = load_model_from_github(model_file)
         elif selected_model == 'Random Forest':
             model = RandomForestRegressor()
+            response = requests.get(model_file)
             model = joblib.load(BytesIO(response.content))
         elif selected_model == 'Linear Regression':
             model = LinearRegression()
+            response = requests.get(model_file)
             model = joblib.load(BytesIO(response.content))
         elif selected_model == 'ARIMA':
             model = load_arima_model(model_file)
