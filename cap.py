@@ -68,11 +68,11 @@ def main():
 
     # Load the selected model
     model_files = {
-        'LSTM': 'LSTM.h5',
-        'Regressor': 'regressor_model.h5',
-        'Random Forest': 'random_forest_model.pkl',
-        'Linear Regression': 'linear_regression_model.pkl',
-        'ARIMA': 'arima_model.pkl'
+        'LSTM': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/LSTM.h5',
+        'Regressor': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5',
+        'Random Forest': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/random_forest_model.pkl',
+        'Linear Regression': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/linear_regression_model.pkl',
+        'ARIMA': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/arima_model.pkl'
     }
 
     model_file = model_files.get(selected_model)
