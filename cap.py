@@ -9,18 +9,17 @@ import requests
 import tempfile
 import os
 from tensorflow.keras.models import load_model
+import urllib.request
 
 # Function to load Keras model from a URL
 def load_keras_model_from_github(model_url):
     try:
-        response = requests.get(model_url)
-        response.raise_for_status()
-        
-        # Create a temporary file to store the downloaded model
-        temp_model_file_path = tempfile.NamedTemporaryFile(suffix=".h5", delete=False).name
-        with open(temp_model_file_path, 'wb') as temp_model_file:
-            temp_model_file.write(response.content)
-        
+        # Download the model file
+        with urllib.request.urlopen(model_url) as response:
+            with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
+                temp_model_file.write(response.read())
+                temp_model_file_path = temp_model_file.name
+
         # Load the Keras model from the temporary file
         keras_model = load_model(temp_model_file_path)
         return keras_model
@@ -55,8 +54,6 @@ def main():
     if keras_model is not None:
         st.success("Keras Neural Network model loaded successfully!")
 
-    # Model Training and Prediction
-    if keras_model is not None:
         # Make predictions
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaler.fit(data['Close'].values.reshape(-1, 1))
