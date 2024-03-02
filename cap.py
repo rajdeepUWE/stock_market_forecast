@@ -19,14 +19,15 @@ def load_keras_model(model_file):
         st.error(f"Error loading model: {e}")
         return None
 
-# Function to fit ARIMA model with previously trained parameters
-def load_arima_model(model_params):
+# Function to load ARIMA model parameters from a file
+def load_arima_params(model_file):
     try:
-        # Create an ARIMA model instance
-        model = ARIMA(**model_params)
-        return model
+        # Load ARIMA model parameters from the file
+        with open(model_file, 'rb') as f:
+            model_params = pickle.load(f)
+        return model_params
     except Exception as e:
-        st.error(f"Error creating ARIMA model: {e}")
+        st.error(f"Error loading ARIMA model parameters: {e}")
         return None
 
 # Function to make predictions using the selected model
@@ -79,9 +80,9 @@ def main():
             model = LinearRegression()
             model = model.load(model_file)
         elif selected_model == 'ARIMA':
-            model_params = load_arima_model(model_file)
+            model_params = load_arima_params(model_file)
             if model_params:
-                model = load_arima_model(model_params)
+                model = ARIMA(**model_params)
             else:
                 return
         else:
