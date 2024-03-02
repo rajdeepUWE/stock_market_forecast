@@ -83,7 +83,8 @@ def main():
         elif selected_model == 'ARIMA':
             model_params = load_arima_params(model_file)
             if model_params:
-                model = ARIMA(**model_params)
+                model = ARIMA(order=(model_params['p'], model_params['d'], model_params['q']),
+                              seasonal_order=(model_params['P'], model_params['D'], model_params['Q'], model_params['s']))
             else:
                 return
         else:
