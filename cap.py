@@ -19,14 +19,14 @@ def load_keras_model(model_file):
         st.error(f"Error loading model: {e}")
         return None
 
-# Function to load ARIMA model from a file
-def load_arima_model(model_file):
+# Function to fit ARIMA model with previously trained parameters
+def load_arima_model(model_params):
     try:
-        # Load the ARIMA model
-        model = ARIMA.load(model_file)
+        # Create an ARIMA model instance
+        model = ARIMA(**model_params)
         return model
     except Exception as e:
-        st.error(f"Error loading ARIMA model: {e}")
+        st.error(f"Error creating ARIMA model: {e}")
         return None
 
 # Function to make predictions using the selected model
@@ -65,7 +65,7 @@ def main():
         'Regressor': 'regressor_model.h5',
         'Random Forest': 'random_forest_model.pkl',
         'Linear Regression': 'linear_regression_model.pkl',
-        'ARIMA': 'arima_model.pkl'
+        'ARIMA': 'arima_model_params.pkl'  # Assuming this file contains the ARIMA model parameters
     }
 
     model_file = model_files.get(selected_model)
@@ -79,7 +79,11 @@ def main():
             model = LinearRegression()
             model = model.load(model_file)
         elif selected_model == 'ARIMA':
-            model = load_arima_model(model_file)
+            model_params = load_arima_model(model_file)
+            if model_params:
+                model = load_arima_model(model_params)
+            else:
+                return
         else:
             st.error("Invalid model selected.")
 
