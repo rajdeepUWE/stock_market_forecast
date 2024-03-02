@@ -4,32 +4,41 @@ import yfinance as yf
 import streamlit as st
 import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.svm import SVR
-import requests
-import tempfile
-import os
 from tensorflow.keras.models import load_model
-import urllib.request
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
+from statsmodels.tsa.arima.model import ARIMA
 
 # Function to load Keras model from a URL
 def load_model_from_github(model_url):
     try:
-        # Download the model file
-        with urllib.request.urlopen(model_url) as response:
-            with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
-                temp_model_file.write(response.read())
-                temp_model_file_path = temp_model_file.name
-
-        # Load the model from the temporary file
-        model = load_model(temp_model_file_path)
+        # Load the model from the GitHub URL
+        model = load_model(model_url)
         return model
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None
-    finally:
-        # Clean up: delete the temporary file
-        if os.path.exists(temp_model_file_path):
-            os.unlink(temp_model_file_path)
+
+# Function to load ARIMA model from a file
+def load_arima_model(model_file):
+    try:
+        # Load the ARIMA model from the file
+        model = ARIMA.load(model_file)
+        return model
+    except Exception as e:
+        st.error(f"Error loading ARIMA model: {e}")
+        return None
+
+# Function to make predictions using the selected model
+def make_predictions(model_type, model, X_pred_scaled, scaler):
+    if model_type == 'LSTM' or model_type == 'Regressor':
+        y_pred = model.predict(X_pred_scaled).flatten()
+    elif model_type == 'Random Forest' or model_type == 'Linear Regression':
+        y_pred = model.predict(X_pred_scaled)
+    else:  # ARIMA
+        y_pred = model.forecast(steps=len(X_pred_scaled))[0]
+    return scaler.inverse_transform(y_pred.reshape(-1, 1)).flatten()
 
 # Streamlit UI
 def main():
@@ -49,28 +58,43 @@ def main():
     st.write(data)
 
     # Model selection
-    selected_model = st.sidebar.selectbox('Select Model', ['LSTM', 'Regressor', 'Random Forest', 'Linear Regression'])
+    selected_model = st.sidebar.selectbox('Select Model', ['LSTM', 'Regressor', 'Random Forest', 'Linear Regression', 'ARIMA'])
 
-    # Load the selected model from GitHub
-    model_urls = {
+    # Load the selected model
+    model_files = {
         'LSTM': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/LSTM.h5',
         'Regressor': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5',
         'Random Forest': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/random_forest_model.h5',
-        'Linear Regression': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/linear_regression_model.h5'
+        'Linear Regression': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/linear_regression_model.h5',
+        'ARIMA': 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/arima_model.pkl'
     }
 
-    model_url = model_urls.get(selected_model)
-    if model_url:
-        model = load_model_from_github(model_url)
+    model_file = model_files.get(selected_model)
+    if model_file:
+        if selected_model in ['LSTM', 'Regressor']:
+            model = load_model_from_github(model_file)
+        elif selected_model == 'Random Forest':
+            model = RandomForestRegressor()
+            model.load(model_file)
+        elif selected_model == 'Linear Regression':
+            model = LinearRegression()
+            model.load(model_file)
+        elif selected_model == 'ARIMA':
+            model = load_arima_model(model_file)
+        else:
+            st.error("Invalid model selected.")
+
         if model:
             st.success(f"{selected_model} model loaded successfully!")
 
-            # Make predictions
+            # Prepare data for predictions
             scaler = MinMaxScaler(feature_range=(0, 1))
             scaler.fit(data['Close'].values.reshape(-1, 1))
             X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
             X_pred_scaled = scaler.transform(X_pred)
-            y_pred = model.predict(X_pred_scaled).flatten()
+
+            # Make predictions
+            y_pred = make_predictions(selected_model, model, X_pred_scaled, scaler)
 
             # Plot Original vs Predicted Prices
             st.subheader('Original vs Predicted Prices')
