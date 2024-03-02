@@ -14,10 +14,10 @@ def load_svr_model_from_github(model_url):
     try:
         response = requests.get(model_url)
         response.raise_for_status()
-        with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
+        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as temp_model_file:
             temp_model_file.write(response.content)
             temp_model_file_path = temp_model_file.name
-        svr_model = load_model(temp_model_file_path)
+        svr_model = joblib.load(temp_model_file_path)
         return svr_model
     except Exception as e:
         st.error(f"Error loading SVR model: {e}")
@@ -73,7 +73,7 @@ def main():
     st.plotly_chart(fig_ma200)
 
     # Load the SVR model from GitHub
-    model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/regressor_model.h5'
+    model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/svr_model.pkl'
     svr_model = load_svr_model_from_github(model_url)
     if svr_model is not None:
         st.success("SVR model loaded successfully!")
