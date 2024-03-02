@@ -49,7 +49,7 @@ def main():
     st.write(data)
 
     # Load the Keras model from GitHub
-    model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/random_forest_model.h5'
+    model_url = 'https://github.com/rajdeepUWE/stock_market_forecast/raw/master/LSTM.h5'
     keras_model = load_keras_model_from_github(model_url)
     if keras_model is not None:
         st.success("Keras Neural Network model loaded successfully!")
