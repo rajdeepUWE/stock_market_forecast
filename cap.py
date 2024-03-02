@@ -67,7 +67,7 @@ def main():
         'Regressor': 'regressor_model.h5',
         'Random Forest': 'random_forest_model.pkl',
         'Linear Regression': 'linear_regression_model.pkl',
-        'ARIMA': 'arima_model.pkl'  # Assuming this file contains the ARIMA model parameters
+        'ARIMA': 'arima_model_params.pkl'  # Assuming this file contains the ARIMA model parameters
     }
 
     model_file = model_files.get(selected_model)
@@ -83,8 +83,7 @@ def main():
         elif selected_model == 'ARIMA':
             model_params = load_arima_params(model_file)
             if model_params:
-                model = ARIMA(order=(model_params['p'], model_params['d'], model_params['q']),
-                              seasonal_order=(model_params['P'], model_params['D'], model_params['Q'], model_params['s']))
+                model = ARIMA(**model_params)
             else:
                 return
         else:
