@@ -67,7 +67,7 @@ def main():
         'Regressor': 'regressor_model.h5',
         'Random Forest': 'random_forest_model.pkl',
         'Linear Regression': 'linear_regression_model.pkl',
-        'ARIMA': 'arima_model_params.pkl'  # Assuming this file contains the ARIMA model parameters
+        'ARIMA': 'arima_model.pkl'  # Assuming this file contains the ARIMA model parameters
     }
 
     model_file = model_files.get(selected_model)
