@@ -9,3 +9,4 @@ tensorflow
 protobuf
 requests
 statsmodels
+pmdarima
