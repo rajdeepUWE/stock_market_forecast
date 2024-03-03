@@ -10,4 +10,4 @@ protobuf
 requests
 statsmodels
 pmdarima
-TA-Lib
+
